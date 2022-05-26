@@ -1,0 +1,13 @@
+BallAndBeamController.launch
+Core/Inc/stm32*
+Core/Inc/main.h
+Core/Src/app*
+Core/src/stm32*
+Core/src/sys*
+Debug
+Drivers
+Middlewares
+STM32G474RETX_FLASH.ld
+STM32G474RETX_RAM.ld
+Binaries
+Includes
