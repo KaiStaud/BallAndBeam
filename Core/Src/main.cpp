@@ -26,6 +26,8 @@
 #include "INA219.h"
 #include "ICM20948_WE.h"
 #include "string.h"
+
+#include "Inclinometer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -621,9 +623,9 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 1;
+  htim5.Init.Prescaler = 170;//170; // PWM Clock:1 MHz
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 1000;
+  htim5.Init.Period = 10000; // 1 MHz / 10000 = 100 Hz
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim5) != HAL_OK)
@@ -801,19 +803,30 @@ void controltask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	if(HAL_GPIO_ReadPin(Button_GPIO_Port, Button_Pin) == GPIO_PIN_SET)
-	{
+	//if(HAL_GPIO_ReadPin(Button_GPIO_Port, Button_Pin) == GPIO_PIN_SET)
+	//{
 	// Rotate for 1/9 turn:
-	 RotateCClockwise();
-	 SetSpeed(750);
-	 osDelay(10);
+	 RotateCClockwise(); // Moves lowers sensor
+	 SetSpeed(1500); // Frequency = 25 Hz -> T = 40 ms
+	 osDelay(400);
+
 	 Stop();
-	}
-	else
-	{
-		Stop();
-	}
-	 osDelay(2000);
+	 osDelay(500);
+
+	 SetSpeed(2000); // Frequency = 25 Hz -> T = 40 ms
+	 RotateClockwise(); // Moves lowers sensor
+	 osDelay(750);
+
+	 Stop();
+	 osDelay(500);
+	 //RotateClockwise();
+
+
+	//}
+	//else
+	//{
+	//	Stop();
+	//}
   }
   /* USER CODE END controltask */
 }
@@ -923,6 +936,10 @@ void currentmonitor_task(void const * argument)
 /* USER CODE END Header_imu_task */
 void imu_task(void const * argument)
 {
+
+	SoftwareSensors::Inclinometer inclinometer;
+	inclinometer.calibrate_ZeroDegrees(9810, 0);
+	inclinometer.get_InclineAngle(0.9*9810);
   /* USER CODE BEGIN imu_task */
     osDelay(3000);
 	char buf[100];
@@ -937,9 +954,9 @@ void imu_task(void const * argument)
 
 	myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
 	myIMU.setAccSampleRateDivider(10);
-	myIMU.setAccDLPF(ICM20948_DLPF_6);
-	myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16640.0,
-			16560.0);
+//	myIMU.setAccDLPF(ICM20948_DLPF_6);
+//	myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16640.0,
+//			16560.0);
 	//myIMU.autoOffsets();
   /* Infinite loop */
   for(;;)
@@ -963,7 +980,7 @@ void imu_task(void const * argument)
 	HAL_UART_Transmit(&huart2,
 			(uint8_t*) "*************************************\r\n", 42, 10);
 */
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END imu_task */
 }
