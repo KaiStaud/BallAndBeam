@@ -27,10 +27,12 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_i2c_ex.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h \
+ ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h \
+ ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h \
  ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h \
- ../Core/Src/../Inc/ICM20948_WE.h ../Core/Src/../L298n/L298N.h \
- ../Core/Src/../Inc/etl/functional.h ../Core/Src/../Inc/etl/platform.h \
+ ../Core/Src/../Inc/ICM20948_WE.h ../Core/Src/../Inc/etl/functional.h \
+ ../Core/Src/../Inc/etl/platform.h \
  ../Core/Src/../Inc/etl/file_error_numbers.h \
  ../Core/Src/../Inc/etl/profiles/determine_compiler_version.h \
  ../Core/Src/../Inc/etl/profiles/determine_compiler.h \
@@ -104,10 +106,11 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_i2c_ex.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_pwr_ex.h:
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim.h:
+../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_tim_ex.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart.h:
 ../Drivers/STM32G4xx_HAL_Driver/Inc/stm32g4xx_hal_uart_ex.h:
 ../Core/Src/../Inc/ICM20948_WE.h:
-../Core/Src/../L298n/L298N.h:
 ../Core/Src/../Inc/etl/functional.h:
 ../Core/Src/../Inc/etl/platform.h:
 ../Core/Src/../Inc/etl/file_error_numbers.h:

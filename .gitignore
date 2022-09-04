@@ -1,6 +1,6 @@
-Binaries
-Includes
-Core/Startup
-Drivers
-Debug
+Binaries/*
+Includes/*
+Core/Startup/*
+Drivers/*
+Debug/*
 

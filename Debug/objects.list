@@ -1,5 +1,3 @@
-"./Core/L298n/L298N.o"
-"./Core/L298n/L298NX2.o"
 "./Core/Src/ICM20948_WE.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32g4xx_hal_msp.o"

@@ -25,6 +25,7 @@
 #include "../Inc/ICM20948_WE.h"
 #include <cstdint>
 #include <cstdio>
+#include <string>
 #include "../Inc/etl/functional.h"
 #include "../Inc/etl/vector.h"
 extern "C"{
@@ -51,6 +52,8 @@ extern "C"{
 
 I2C_HandleTypeDef hi2c3;
 
+TIM_HandleTypeDef htim5;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -63,7 +66,20 @@ static void MX_GPIO_Init(void);
 static void MX_FDCAN1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
+
+uint8_t set_dutycycle(int argc, char *argv[]){
+	uint64_t pulse_width = std::stoi(argv[1]);
+	if(pulse_width <= 1000)
+	{
+		__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, pulse_width);
+			return EXIT_SUCCESS;
+	}else{
+		return EXIT_FAILURE;
+	}
+}
+
 uint8_t tilt_request(int argc, char *argv[]){
 //	HAL_UART_Transmit(&huart2, (uint8_t*)argv[1], sizeof(argv[1]), 10);
 // IO Access needs to be done via direct Register Access! NO HAL!
@@ -71,7 +87,6 @@ uint8_t tilt_request(int argc, char *argv[]){
 //	GPIOA->ODR^=1<<5;  // blink the led//	  HAL_Delay(500);
 //	HAL_Delay(100);
 //}
-
 	if(strcmp(argv[1],"up") == 0){
 //		HAL_UART_Transmit(&huart2, (uint8_t*)"Rot CC", sizeof(argv[1]), 10);
 		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
@@ -86,9 +101,11 @@ uint8_t tilt_request(int argc, char *argv[]){
 	}
 
 	// Wont work, bad hal stuff!
-  HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_SET);
-  HAL_Delay(500);
-  HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_SET);
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
   return EXIT_SUCCESS;
 }
 /* USER CODE END PFP */
@@ -129,9 +146,12 @@ int main(void)
   MX_FDCAN1_Init();
   MX_I2C3_Init();
   MX_USART2_UART_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
   CLI_INIT(&huart2);
    CLI_ADD_CMD("tilt", "tilt [up] / [down]", tilt_request);
+   CLI_ADD_CMD("set_pwm", "lambda[0...1000]", set_dutycycle);
    CLI_RUN();
    ICM20948_WE myIMU = ICM20948_WE(&hi2c3);
 
@@ -168,42 +188,16 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
+  {   CLI_RUN();
+
+//  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+//  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
+//for(int i=0;i<=1000;i=i+100 ){
+//  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, i);
+//	HAL_Delay(200);
+//}
     /* USER CODE END WHILE */
-HAL_Delay(500);
-	  CLI_RUN();
 
-	  /*
-	  	  uint8_t x_reg = 0x2D;
-	  	  uint8_t acc[6];
-	  	  int16_t x_raw,y_raw,z_raw;
-	  	  HAL_I2C_Master_Transmit(&hi2c3, 210, &x_reg, 1, 10);
-	  	  HAL_I2C_Master_Receive(&hi2c3,210, acc, 6, 10);
-	  	  x_raw = (acc[0]<<8 | acc[1]);
-	  	  y_raw = (acc[2]<<8 | acc[3]);
-	  	  z_raw = (acc[4]<<8 | acc[5]);
-	  	   float x_g = x_raw *9.81 / 16384,y_g = y_raw *9.81 / 16384,z_g = z_raw *9.81 / 16384;
-	  		printf("Raw acceleration: {%i,%i,%i}\r\n",x_raw,y_raw,z_raw);
-	  		printf("acceleration:     {%f,%f,%f\r\n",x_g,y_g,z_g);
-	  		printf("\r\n");
-	  */
-/*
-	  	  myIMU.readSensor();
-
-	      xyzFloat accRaw = myIMU.getAccRawValues();
-	      xyzFloat corrAccRaw = myIMU.getCorrectedAccRawValues();
-	      xyzFloat gVal = myIMU.getGValues();
-	      float resultantG = myIMU.getResultantG(gVal);
-	      printf("Raw acceleration values (x,y,z):");
-	      printf("%f,%f,%f\r\n",accRaw.x,accRaw.y,accRaw.z);
-	      printf("Corrected raw acceleration values (x,y,z):");
-	      printf("%f,%f,%f\r\n",corrAccRaw.x,corrAccRaw.y,corrAccRaw.z);
-	      printf("g-values (x,y,z):");
-	      char buff[100];
-	      sprintf(buff,"%f,%f,%f\r\n",gVal.x,gVal.y,gVal.z);
-	      HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 100);
-	      printf("Resultant g: %f\r\n",resultantG);
-	      printf("*************************************\r\n");
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -347,6 +341,65 @@ static void MX_I2C3_Init(void)
 }
 
 /**
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM5_Init(void)
+{
+
+  /* USER CODE BEGIN TIM5_Init 0 */
+
+  /* USER CODE END TIM5_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM5_Init 1 */
+
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM5;
+  htim5.Init.Prescaler = 1;
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 1000;
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 500;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM5_Init 2 */
+
+  /* USER CODE END TIM5_Init 2 */
+  HAL_TIM_MspPostInit(&htim5);
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -414,10 +467,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, IN2_Pin|IN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -432,19 +485,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : IN2_Pin IN1_Pin */
-  GPIO_InitStruct.Pin = IN2_Pin|IN1_Pin;
+  /*Configure GPIO pin : IN2_Pin */
+  GPIO_InitStruct.Pin = IN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(IN2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ENA_Pin */
-  GPIO_InitStruct.Pin = ENA_Pin;
+  /*Configure GPIO pin : IN1_Pin */
+  GPIO_InitStruct.Pin = IN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ENA_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(IN1_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
