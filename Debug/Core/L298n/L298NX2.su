@@ -1,0 +1,47 @@
+/opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/arm-none-eabi/thumb/v7e-m+fp/hard/bits/gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
+../Core/L298n/L298NX2.cpp:15:1:L298NX2::L298NX2(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t)	16	static
+../Core/L298n/L298NX2.cpp:31:1:L298NX2::L298NX2(uint8_t, uint8_t, uint8_t, uint8_t)	16	static
+../Core/L298n/L298NX2.cpp:44:6:void trace(std::string)	16	static
+../Core/L298n/L298NX2.cpp:53:6:void L298NX2::setSpeedA(short unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:58:16:short unsigned int L298NX2::getSpeedA()	16	static
+../Core/L298n/L298NX2.cpp:63:6:void L298NX2::forwardA()	16	static
+../Core/L298n/L298NX2.cpp:68:6:void L298NX2::backwardA()	16	static
+../Core/L298n/L298NX2.cpp:73:6:void L298NX2::runA(L298N::Direction)	16	static
+../Core/L298n/L298NX2.cpp:78:6:void L298NX2::runForA(long unsigned int, L298N::Direction)	56	static
+../Core/L298n/L298NX2.cpp:84:6:void L298NX2::runForA(long unsigned int, L298N::Direction, CallBackFunction)	56	static
+../Core/L298n/L298NX2.cpp:90:6:void L298NX2::forwardForA(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:95:6:void L298NX2::forwardForA(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:100:6:void L298NX2::backwardForA(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:105:6:void L298NX2::backwardForA(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:110:6:void L298NX2::stopA()	16	static
+../Core/L298n/L298NX2.cpp:115:6:void L298NX2::resetA()	16	static
+../Core/L298n/L298NX2.cpp:120:6:bool L298NX2::isMovingA()	16	static
+../Core/L298n/L298NX2.cpp:125:18:L298N::Direction L298NX2::getDirectionA()	16	static
+../Core/L298n/L298NX2.cpp:149:6:void L298NX2::setSpeedB(short unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:154:16:short unsigned int L298NX2::getSpeedB()	16	static
+../Core/L298n/L298NX2.cpp:159:6:void L298NX2::forwardB()	16	static
+../Core/L298n/L298NX2.cpp:163:6:void L298NX2::backwardB()	16	static
+../Core/L298n/L298NX2.cpp:168:6:void L298NX2::runB(L298N::Direction)	16	static
+../Core/L298n/L298NX2.cpp:173:6:void L298NX2::runForB(long unsigned int, L298N::Direction)	24	static
+../Core/L298n/L298NX2.cpp:177:6:void L298NX2::runForB(long unsigned int, L298N::Direction, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:182:6:void L298NX2::forwardForB(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:187:6:void L298NX2::forwardForB(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:192:6:void L298NX2::backwardForB(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:197:6:void L298NX2::backwardForB(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:202:6:void L298NX2::stopB()	16	static
+../Core/L298n/L298NX2.cpp:207:6:void L298NX2::resetB()	16	static
+../Core/L298n/L298NX2.cpp:212:6:bool L298NX2::isMovingB()	16	static
+../Core/L298n/L298NX2.cpp:217:18:L298N::Direction L298NX2::getDirectionB()	16	static
+../Core/L298n/L298NX2.cpp:241:6:void L298NX2::setSpeed(short unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:247:6:void L298NX2::forward()	16	static
+../Core/L298n/L298NX2.cpp:253:6:void L298NX2::backward()	16	static
+../Core/L298n/L298NX2.cpp:259:6:void L298NX2::run(L298N::Direction)	16	static
+../Core/L298n/L298NX2.cpp:266:6:void L298NX2::runFor(long unsigned int, L298N::Direction, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:297:6:void L298NX2::runFor(long unsigned int, L298N::Direction)	24	static
+../Core/L298n/L298NX2.cpp:302:6:void L298NX2::forwardFor(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:307:6:void L298NX2::forwardFor(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:312:6:void L298NX2::backwardFor(long unsigned int, CallBackFunction)	24	static
+../Core/L298n/L298NX2.cpp:317:6:void L298NX2::backwardFor(long unsigned int)	16	static
+../Core/L298n/L298NX2.cpp:322:6:void L298NX2::stop()	16	static
+../Core/L298n/L298NX2.cpp:328:6:void L298NX2::reset()	16	static
+../Core/L298n/L298NX2.cpp:335:6:static void L298NX2::fakeCallback()	4	static
