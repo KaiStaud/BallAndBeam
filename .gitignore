@@ -3,4 +3,5 @@ Includes/*
 Core/Startup/*
 Drivers/*
 Debug/*
-
+STM32G474RETX_FLASH.ld
+STM32G474RETX_RAM.ld
