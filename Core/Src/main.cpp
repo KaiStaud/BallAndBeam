@@ -23,11 +23,14 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "../Inc/ICM20948_WE.h"
+#include "../SysInit/sys_init.h"
+#include "../Controllib/generic_pid.h"
+
 #include <cstdint>
 #include <cstdio>
 #include <string>
-#include "../Inc/etl/functional.h"
-#include "../Inc/etl/vector.h"
+
+
 extern "C"{
 #include "../Inc/sys_command_line.h"
 }
@@ -57,7 +60,7 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+controllib::generic_pid tilt_angle_controller(1,0,0,0,10); // Kp = 1 ,Ts= 10ms
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,6 +83,23 @@ uint8_t set_dutycycle(int argc, char *argv[]){
 	}
 }
 
+uint8_t set_pid1_params(int argc, char *argv[]){
+	char option = argv[1][0];
+	double param = std::stoi(argv[2]);
+
+	switch(option)
+	{
+	case 'p':tilt_angle_controller.set_kd(param);break;
+	case 'i':tilt_angle_controller.set_ki(param);break;
+	case 'd':tilt_angle_controller.set_kd(param);break;
+	case 'b':tilt_angle_controller.set_bias(param);break;
+	case 'x':tilt_angle_controller.update_setpoint(param);break;
+	default: return EXIT_FAILURE;break;
+	}
+		return EXIT_FAILURE;
+	}
+
+
 uint8_t tilt_request(int argc, char *argv[]){
 //	HAL_UART_Transmit(&huart2, (uint8_t*)argv[1], sizeof(argv[1]), 10);
 // IO Access needs to be done via direct Register Access! NO HAL!
@@ -87,12 +107,13 @@ uint8_t tilt_request(int argc, char *argv[]){
 //	GPIOA->ODR^=1<<5;  // blink the led//	  HAL_Delay(500);
 //	HAL_Delay(100);
 //}
-	if(strcmp(argv[1],"up") == 0){
+	int t = std::stoi(argv[2]);
+	if(strcmp(argv[1],"down") == 0){
 //		HAL_UART_Transmit(&huart2, (uint8_t*)"Rot CC", sizeof(argv[1]), 10);
 		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
 		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
 	}
-	else if(strcmp(argv[1],"down") == 0){
+	else if(strcmp(argv[1],"up") == 0){
 //		HAL_UART_Transmit(&huart2, (uint8_t*)"Rot AC", sizeof(argv[1]), 10);
 		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
@@ -102,17 +123,17 @@ uint8_t tilt_request(int argc, char *argv[]){
 
 	// Wont work, bad hal stuff!
   //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_SET);
-  HAL_Delay(1000);
+  HAL_Delay(t);
   HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
   //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
   return EXIT_SUCCESS;
 }
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -150,8 +171,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
   CLI_INIT(&huart2);
-   CLI_ADD_CMD("tilt", "tilt [up] / [down]", tilt_request);
+   CLI_ADD_CMD("tilt", "tilt [up] / [down] [ms-time=100]", tilt_request);
    CLI_ADD_CMD("set_pwm", "lambda[0...1000]", set_dutycycle);
+   CLI_ADD_CMD("l1_param", "inner PID-Controller params:[p,i,d,b,x]",set_pid1_params);
    CLI_RUN();
    ICM20948_WE myIMU = ICM20948_WE(&hi2c3);
 
@@ -171,8 +193,8 @@ int main(void)
   myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
   myIMU.setAccSampleRateDivider(10);
   myIMU.setAccDLPF(ICM20948_DLPF_6);
-  myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16640.0, 16560.0);
-  myIMU.autoOffsets();
+//  myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16640.0, 16560.0);
+//  myIMU.autoOffsets();
 
   printf("Done!\r\n");
   HAL_Delay(1000);
@@ -184,22 +206,23 @@ int main(void)
   HAL_I2C_Master_Receive(&hi2c3, 210, &active_axes, 1, 10);
   printf("Active axes: 0x%x\r\n",active_axes);
   /* USER CODE END 2 */
-
+  // Alle sensoren testen:
+Init::sensor_checkup(myIMU);
+Init::sensor_checkup(myIMU);
+tilt_angle_controller.update_setpoint(0);
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {   CLI_RUN();
-
-//  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
-//  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
-//for(int i=0;i<=1000;i=i+100 ){
-//  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, i);
-//	HAL_Delay(200);
-//}
+	  while(1)
+	  {
+  	  CLI_RUN();
+  	  double y = tilt_angle_controller.calculate_output(Init::read_tilt_angle(myIMU));
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
+	  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+	  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
   /* USER CODE END 3 */
 }
 
