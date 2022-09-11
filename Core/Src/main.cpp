@@ -60,7 +60,7 @@ TIM_HandleTypeDef htim5;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-controllib::generic_pid tilt_angle_controller(1,0,0,0,10); // Kp = 1 ,Ts= 10ms
+controllib::generic_pid tilt_angle_controller(20,0,0,0,10); // Kp = 1 ,Ts= 10ms
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,16 +87,19 @@ uint8_t set_pid1_params(int argc, char *argv[]){
 	char option = argv[1][0];
 	double param = std::stoi(argv[2]);
 
+	//switch((*argv)[1][0])
 	switch(option)
 	{
-	case 'p':tilt_angle_controller.set_kd(param);break;
+	case 'p':tilt_angle_controller.set_kp(param);break;
 	case 'i':tilt_angle_controller.set_ki(param);break;
 	case 'd':tilt_angle_controller.set_kd(param);break;
 	case 'b':tilt_angle_controller.set_bias(param);break;
 	case 'x':tilt_angle_controller.update_setpoint(param);break;
-	default: return EXIT_FAILURE;break;
+	default: printf("Invalid Argument 0x%x\r\n",argv[1][0]);return EXIT_FAILURE;break;
 	}
-		return EXIT_FAILURE;
+
+
+		return EXIT_SUCCESS;
 	}
 
 
@@ -216,6 +219,20 @@ tilt_angle_controller.update_setpoint(0);
 	  {
   	  CLI_RUN();
   	  double y = tilt_angle_controller.calculate_output(Init::read_tilt_angle(myIMU));
+  	  // Change Direction according to y's sign:
+  	  if(y < 0){ // Raise the beam!
+		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
+  	  }
+  	  else // Lower the beam!
+  	  {
+		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+  	  }
+  	  // Change the dutycycle according to y's absolute value
+  	  int dutycycle = abs(y);
+		__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, dutycycle);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -223,6 +240,7 @@ tilt_angle_controller.update_setpoint(0);
 	  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
 	  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
 	  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
+	  HAL_Delay(10);
   /* USER CODE END 3 */
 }
 
