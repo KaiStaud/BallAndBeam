@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -30,9 +30,9 @@
 #include <cstdio>
 #include <string>
 
-
-extern "C"{
+extern "C" {
 #include "../Inc/sys_command_line.h"
+
 }
 /* USER CODE END Includes */
 
@@ -57,53 +57,90 @@ I2C_HandleTypeDef hi2c3;
 
 TIM_HandleTypeDef htim5;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-controllib::generic_pid tilt_angle_controller(20,0,0,0,10); // Kp = 1 ,Ts= 10ms
+controllib::generic_pid tilt_angle_controller(20, 0, 0, 0, 10); // Kp = 1 ,Ts= 10ms
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_FDCAN1_Init(void);
 static void MX_I2C3_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM5_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_FDCAN1_Init(void);
 /* USER CODE BEGIN PFP */
+enum class eeprom_layout {
+	l1_kp = 0x1, l1_ki = 0x2, l1_kd = 0x3, l1_bias = 0x4, l1_x = 0x5
+};
+void update_config_eeprom(uint8_t param, eeprom_layout parameter_address) {
+uint8_t txData[1]= {param};
 
-uint8_t set_dutycycle(int argc, char *argv[]){
-	uint64_t pulse_width = std::stoi(argv[1]);
-	if(pulse_width <= 1000)
+}
+
+void read_config_eeprom(){
+	uint8_t pData[8];
+	HAL_I2C_Mem_Read(&hi2c3, 0xA2, 0, 0x010, pData, 8, 10);
+	printf("Reading config-eeprom:\r\n");
+	for(int i=0;i<5;i++)
 	{
+		printf("%d\r\n",pData[i]);
+	}
+
+}
+
+uint8_t set_dutycycle(int argc, char *argv[]) {
+	uint64_t pulse_width = std::stoi(argv[1]);
+	if (pulse_width <= 1000) {
 		__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, pulse_width);
-			return EXIT_SUCCESS;
-	}else{
+		return EXIT_SUCCESS;
+	} else {
 		return EXIT_FAILURE;
 	}
 }
 
-uint8_t set_pid1_params(int argc, char *argv[]){
+uint8_t set_pid1_params(int argc, char *argv[]) {
 	char option = argv[1][0];
 	double param = std::stoi(argv[2]);
 
 	//switch((*argv)[1][0])
-	switch(option)
-	{
-	case 'p':tilt_angle_controller.set_kp(param);break;
-	case 'i':tilt_angle_controller.set_ki(param);break;
-	case 'd':tilt_angle_controller.set_kd(param);break;
-	case 'b':tilt_angle_controller.set_bias(param);break;
-	case 'x':tilt_angle_controller.update_setpoint(param);break;
-	default: printf("Invalid Argument 0x%x\r\n",argv[1][0]);return EXIT_FAILURE;break;
+	switch (option) {
+	case 'p':
+		tilt_angle_controller.set_kp(param);
+		update_config_eeprom(param,eeprom_layout::l1_kp);
+		break;
+	case 'i':
+		tilt_angle_controller.set_ki(param);
+		update_config_eeprom(param,eeprom_layout::l1_ki);
+		break;
+	case 'd':
+		tilt_angle_controller.set_kd(param);
+		update_config_eeprom(param,eeprom_layout::l1_kd);
+		break;
+	case 'b':
+		tilt_angle_controller.set_bias(param);
+		update_config_eeprom(param,eeprom_layout::l1_bias);
+
+		break;
+	case 'x':
+		tilt_angle_controller.update_setpoint(param);
+		update_config_eeprom(param,eeprom_layout::l1_x);
+
+		break;
+	default:
+		printf("Invalid Argument 0x%x\r\n", argv[1][0]);
+		return EXIT_FAILURE;
+		break;
 	}
 
+	return EXIT_SUCCESS;
+}
 
-		return EXIT_SUCCESS;
-	}
-
-
-uint8_t tilt_request(int argc, char *argv[]){
+uint8_t tilt_request(int argc, char *argv[]) {
 //	HAL_UART_Transmit(&huart2, (uint8_t*)argv[1], sizeof(argv[1]), 10);
 // IO Access needs to be done via direct Register Access! NO HAL!
 //	for(int i=0;i<10;i++){
@@ -111,32 +148,60 @@ uint8_t tilt_request(int argc, char *argv[]){
 //	HAL_Delay(100);
 //}
 	int t = std::stoi(argv[2]);
-	if(strcmp(argv[1],"down") == 0){
+	if (strcmp(argv[1], "down") == 0) {
 //		HAL_UART_Transmit(&huart2, (uint8_t*)"Rot CC", sizeof(argv[1]), 10);
-		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
-	}
-	else if(strcmp(argv[1],"up") == 0){
+		HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
+	} else if (strcmp(argv[1], "up") == 0) {
 //		HAL_UART_Transmit(&huart2, (uint8_t*)"Rot AC", sizeof(argv[1]), 10);
-		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
-	}else{
+		HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+	} else {
 		return EXIT_FAILURE;
 	}
 
 	// Wont work, bad hal stuff!
-  //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_SET);
-  HAL_Delay(t);
-  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
-  //HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
-  return EXIT_SUCCESS;
+	//HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_SET);
+	HAL_Delay(t);
+	HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(ENA_GPIO_Port, ENA_Pin, GPIO_PIN_RESET);
+	return EXIT_SUCCESS;
 }
+/**
+  * @brief Compares two buffers.
+  * @par Input
+  *  - pBuffer1, pBuffer2: buffers to be compared.
+  *  - BufferLength: buffer's length
+  * @par Output
+  * None.
+  * @retval
+  *   0: pBuffer1 identical to pBuffer2
+  *   1: pBuffer1 differs from pBuffer2
+  */
+static uint32_t BufferCmp8b(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
+{
+  while(BufferLength--)
+  {
+    if(*pBuffer1 != *pBuffer2)
+    {
+      return 1;
+    }
 
+    pBuffer1++;
+    pBuffer2++;
+  }
+  return 0;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+FDCAN_FilterTypeDef sFilterConfig;
+FDCAN_TxHeaderTypeDef TxHeader;
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t TxData[] = {0x10, 0x32};//, 0x54, 0x76, 0x98, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00};
+uint8_t RxData[16];
 /* USER CODE END 0 */
 
 /**
@@ -167,80 +232,168 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_FDCAN1_Init();
   MX_I2C3_Init();
   MX_USART2_UART_Init();
   MX_TIM5_Init();
+  MX_USART1_UART_Init();
+  MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
-  CLI_INIT(&huart2);
-   CLI_ADD_CMD("tilt", "tilt [up] / [down] [ms-time=100]", tilt_request);
-   CLI_ADD_CMD("set_pwm", "lambda[0...1000]", set_dutycycle);
-   CLI_ADD_CMD("l1_param", "inner PID-Controller params:[p,i,d,b,x]",set_pid1_params);
-   CLI_RUN();
-   ICM20948_WE myIMU = ICM20948_WE(&hi2c3);
+	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
+	CLI_INIT(&huart2);
+	CLI_ADD_CMD("tilt", "tilt [up] / [down] [ms-time=100]", tilt_request);
+	CLI_ADD_CMD("set_pwm", "lambda[0...1000]", set_dutycycle);
+	CLI_ADD_CMD("l1_param", "inner PID-Controller params:[p,i,d,b,x]",
+			set_pid1_params);
+	CLI_RUN();
+	ICM20948_WE myIMU = ICM20948_WE(&hi2c3);
 
+	if (!myIMU.init()) {
+		printf("ICM20948 does not respond\r\n");
+	} else {
+		printf("ICM20948 is connected\r\n");
+	}
+	myIMU.enableAcc(true);
 
-  	if(!myIMU.init()){
-  	  printf("ICM20948 does not respond\r\n");
-  }
-  else{
-    printf("ICM20948 is connected\r\n");
-  }
-
-
-  	printf("Position your ICM20948 flat and don't move it - calibrating...\r\n");
-  HAL_Delay(1000);
-  myIMU.enableAcc(true);
-
-  myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
-  myIMU.setAccSampleRateDivider(10);
-  myIMU.setAccDLPF(ICM20948_DLPF_6);
+	myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
+	myIMU.setAccSampleRateDivider(10);
+	myIMU.setAccDLPF(ICM20948_DLPF_6);
 //  myIMU.setAccOffsets(-16330.0, 16450.0, -16600.0, 16180.0, -16640.0, 16560.0);
 //  myIMU.autoOffsets();
+	printf("Done!\r\n");
 
-  printf("Done!\r\n");
-  HAL_Delay(1000);
+	// Check if configuration eeprom responnds...
+	for (uint8_t addr = 0; addr < 255; addr++) {
+		if (HAL_I2C_IsDeviceReady(&hi2c3, addr, 3, 10) == HAL_OK) {
+			printf("Found i2c device @ %04x\r\n", addr);
+		}
+	}
 
-  // Aktivierte Achsen lesen:
-  uint8_t active_axes;
-  uint8_t disable_acc_reg = 0x7;
-  HAL_I2C_Master_Transmit(&hi2c3, 210, &disable_acc_reg, 1, 10);
-  HAL_I2C_Master_Receive(&hi2c3, 210, &active_axes, 1, 10);
-  printf("Active axes: 0x%x\r\n",active_axes);
+    FDCAN_FilterTypeDef sFilterConfig;
+
+    /* Configure Rx filter */
+    sFilterConfig.IdType = FDCAN_STANDARD_ID;
+    sFilterConfig.FilterIndex = 0;
+    sFilterConfig.FilterType = FDCAN_FILTER_MASK;
+    sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+    sFilterConfig.FilterID1 = 0x321;
+    sFilterConfig.FilterID2 = 0x7FF;
+    if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Configure global filter:
+       Filter all remote frames with STD and EXT ID
+       Reject non matching frames with STD ID and EXT ID */
+    if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan1, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    if (HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Prepare Tx Header */
+    TxHeader.Identifier =0x321;
+    TxHeader.IdType = FDCAN_STANDARD_ID;
+    TxHeader.TxFrameType = FDCAN_DATA_FRAME;
+    TxHeader.DataLength = FDCAN_DLC_BYTES_2;
+    TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+    TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
+    TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
+    TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+    TxHeader.MessageMarker = 0;
+    /* Start the FDCAN module on both FDCAN instances */
+    if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+	// Load parameters from eeprom:
+	/*
+	 * Parameters written from eeprom hex-file:
+	 * address | parameter
+	 * 0x00 selected controller type
+	 * ------------------------------
+	 * -- 0x00 .. 0x05 : l1 parameters
+	 * 0x01 kp
+	 * 0x02 ki
+	 * 0x03 kd
+	 * 0x04 bias
+	 * 0x05 x (setpoint)
+	 *-------------------------------
+	 */
+//	read_config_eeprom();
+//	while (1) {
+//		uint8_t pData[8];
+//		uint8_t txData[4] = { 0x1, 0x2, 0x3, 0x4 };
+//		HAL_I2C_Mem_Write(&hi2c3, 0xA2, 0, 0x010, txData, 8, 10);
+//		HAL_I2C_Mem_Read(&hi2c3, 0xA2, 0, 0x010, pData, 8, 10);
+//		HAL_Delay(1);
+//	}
+	// Alle sensoren testen:
+	Init::sensor_checkup(myIMU);
+	Init::sensor_checkup(myIMU);
+//	tilt_angle_controller.update_setpoint(0);
+	double l1_check[5] = { -20, -10, 5, 10, 20 };
+	int i = 0;
   /* USER CODE END 2 */
-  // Alle sensoren testen:
-Init::sensor_checkup(myIMU);
-Init::sensor_checkup(myIMU);
-tilt_angle_controller.update_setpoint(0);
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	  while(1)
-	  {
-  	  CLI_RUN();
-  	  double y = tilt_angle_controller.calculate_output(Init::read_tilt_angle(myIMU));
-  	  // Change Direction according to y's sign:
-  	  if(y < 0){ // Raise the beam!
-		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
-  	  }
-  	  else // Lower the beam!
-  	  {
-		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
-  	  }
-  	  // Change the dutycycle according to y's absolute value
-  	  int dutycycle = abs(y);
+	while (1) {
+		HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData);
+		CLI_RUN();
+#if TEST
+			while (i < 5)
+			{
+				tilt_angle_controller.update_setpoint(l1_check[i]);
+			while (Init::read_tilt_angle(myIMU) != l1_check[i])
+			{
+				 double y = tilt_angle_controller.calculate_output(Init::read_tilt_angle(myIMU));
+				  	  // Change Direction according to y's sign:
+				  	  if(y < 0){ // Raise the beam!
+						  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+						  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
+				  	  }
+				  	  else // Lower the beam!
+				  	  {
+						  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
+						  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+				  	  }
+				  	  // Change the dutycycle according to y's absolute value
+				  	  int dutycycle = abs(y);
+						__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, dutycycle);
+						HAL_Delay(10);
+			}
+		}
+	#endif
+		double y = tilt_angle_controller.calculate_output(
+				Init::read_tilt_angle(myIMU));
+		// Change Direction according to y's sign:
+		if (y < 0) { // Raise the beam!
+			HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_SET);
+		} else // Lower the beam!
+		{
+			HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+		}
+		// Change the dutycycle according to y's absolute value
+		int dutycycle = abs(y);
 		__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, dutycycle);
+		HAL_Delay(100);
+		//		  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
+		//		  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
+		//		  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
+		//		  HAL_Delay(10);
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
-	  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin, GPIO_PIN_RESET);
-	  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
-	  HAL_Delay(10);
+	}
   /* USER CODE END 3 */
 }
 
@@ -265,10 +418,10 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV4;
-  RCC_OscInitStruct.PLL.PLLN = 85;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 20;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -313,14 +466,14 @@ static void MX_FDCAN1_Init(void)
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
   hfdcan1.Init.NominalPrescaler = 1;
-  hfdcan1.Init.NominalSyncJumpWidth = 1;
-  hfdcan1.Init.NominalTimeSeg1 = 2;
-  hfdcan1.Init.NominalTimeSeg2 = 2;
+  hfdcan1.Init.NominalSyncJumpWidth = 16;
+  hfdcan1.Init.NominalTimeSeg1 = 63;
+  hfdcan1.Init.NominalTimeSeg2 = 16;
   hfdcan1.Init.DataPrescaler = 1;
-  hfdcan1.Init.DataSyncJumpWidth = 1;
-  hfdcan1.Init.DataTimeSeg1 = 1;
-  hfdcan1.Init.DataTimeSeg2 = 1;
-  hfdcan1.Init.StdFiltersNbr = 0;
+  hfdcan1.Init.DataSyncJumpWidth = 4;
+  hfdcan1.Init.DataTimeSeg1 = 5;
+  hfdcan1.Init.DataTimeSeg2 = 4;
+  hfdcan1.Init.StdFiltersNbr = 1;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
@@ -349,7 +502,7 @@ static void MX_I2C3_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x30A0A7FB;
+  hi2c3.Init.Timing = 0x30909DEC;
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -437,6 +590,54 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 2 */
   HAL_TIM_MspPostInit(&htim5);
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -547,7 +748,42 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != 0)
+  {
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
+    /* Retrieve Rx messages from RX FIFO0 */
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+    {
+      //Error_Handler();
+    }
+    for(int i=0;i<16;i++)
+    {
+    	printf("%04x ",RxData[i]);
+    }
+    printf("\r\n");
+    /* Compare payload to expected data */
+    if (BufferCmp8b(TxData, RxData, 16) != 0)
+    {
+      //Error_Handler();
+    }
+    else
+    {
+      if (hfdcan->Instance == FDCAN1)
+      {
+        /* Turn LED1 on */
+   //     BSP_LED_On(LED1);
+      }
+      else /* FDCAN2 */
+      {
+        /* Turn LED4 on */
+     //   BSP_LED_On(LED4);
+      }
+    }
+  }
+}
 /* USER CODE END 4 */
 
 /**
@@ -557,11 +793,10 @@ static void MX_GPIO_Init(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 

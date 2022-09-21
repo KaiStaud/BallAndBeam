@@ -1,19 +1,24 @@
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/arm-none-eabi/thumb/v7e-m+fp/hard/bits/gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/bits/basic_string.h:6568:3:int std::__cxx11::stoi(const string&, std::size_t*, int)	32	static
-../Core/Src/main.cpp:75:9:uint8_t set_dutycycle(int, char**)	72	static
-../Core/Src/main.cpp:86:9:uint8_t set_pid1_params(int, char**)	72	static
-../Core/Src/main.cpp:106:9:uint8_t tilt_request(int, char**)	56	static
-../Core/Src/main.cpp:146:5:int main()	160	static
-../Core/Src/main.cpp:251:6:void SystemClock_Config()	88	static
-../Core/Src/main.cpp:298:13:void MX_FDCAN1_Init()	8	static
-../Core/Src/main.cpp:341:13:void MX_I2C3_Init()	8	static
-../Core/Src/main.cpp:389:13:void MX_TIM5_Init()	64	static
-../Core/Src/main.cpp:448:13:void MX_USART2_UART_Init()	8	static
-../Core/Src/main.cpp:496:13:void MX_GPIO_Init()	48	static
-../Core/Src/main.cpp:557:6:void Error_Handler()	4	static,ignoring_inline_asm
+../Core/Src/main.cpp:80:6:void update_config_eeprom(uint8_t, eeprom_layout)	24	static
+../Core/Src/main.cpp:85:6:void read_config_eeprom()	40	static
+../Core/Src/main.cpp:96:9:uint8_t set_dutycycle(int, char**)	72	static
+../Core/Src/main.cpp:106:9:uint8_t set_pid1_params(int, char**)	72	static
+../Core/Src/main.cpp:143:9:uint8_t tilt_request(int, char**)	56	static
+../Core/Src/main.cpp:182:17:uint32_t BufferCmp8b(uint8_t*, uint8_t*, uint16_t)	24	static
+../Core/Src/main.cpp:211:5:int main()	232	static
+../Core/Src/main.cpp:404:6:void SystemClock_Config()	88	static
+../Core/Src/main.cpp:451:13:void MX_FDCAN1_Init()	8	static
+../Core/Src/main.cpp:494:13:void MX_I2C3_Init()	8	static
+../Core/Src/main.cpp:542:13:void MX_TIM5_Init()	64	static
+../Core/Src/main.cpp:601:13:void MX_USART1_UART_Init()	8	static
+../Core/Src/main.cpp:649:13:void MX_USART2_UART_Init()	8	static
+../Core/Src/main.cpp:697:13:void MX_GPIO_Init()	48	static
+../Core/Src/main.cpp:751:6:void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef*, uint32_t)	24	static
+../Core/Src/main.cpp:793:6:void Error_Handler()	4	static,ignoring_inline_asm
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/ext/string_conversions.h:63:2:)::_Save_errno::_Save_errno() [with _TRet = long int; _Ret = int; _CharT = char; _Base = {int}]	16	static
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/ext/string_conversions.h:64:2:)::_Save_errno::~_Save_errno() [with _TRet = long int; _Ret = int; _CharT = char; _Base = {int}]	16	static
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/ext/string_conversions.h:73:4:)::_Range_chk::_S_chk(_TRet, std::true_type) [with _TRet = long int; _Ret = int; _CharT = char; _Base = {int}]	16	static
 /opt/st/stm32cubeide_1.9.0_2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.10.3-2021.10.linux64_1.0.0.202111181127/tools/arm-none-eabi/include/c++/10.3.1/ext/string_conversions.h:54:5:) [with _TRet = long int; _Ret = int; _CharT = char; _Base = {int}]	56	static
-../Core/Src/main.cpp:566:1:void __static_initialization_and_destruction_0(int, int)	16	static
-../Core/Src/main.cpp:566:1:cpp)	8	static
+../Core/Src/main.cpp:801:1:void __static_initialization_and_destruction_0(int, int)	16	static
+../Core/Src/main.cpp:801:1:cpp)	8	static
