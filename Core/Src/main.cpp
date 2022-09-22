@@ -320,7 +320,10 @@ float datar3;
 	configuration::l1_params::save_bias(0);
 	*/
 	auto c = configuration::l1_params::load_page();
-
+	tilt_angle_controller.set_kp(c.kp);
+	tilt_angle_controller.set_ki(c.ki);
+	tilt_angle_controller.set_kd(c.kd);
+	tilt_angle_controller.set_bias(c.bias);
 	// Alle sensoren testen:
 	Init::sensor_checkup(myIMU);
 	Init::sensor_checkup(myIMU);
