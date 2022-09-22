@@ -1,5 +1,0 @@
-../Core/Src/sys_queue.c:21:9:shell_queue_init	16	static
-../Core/Src/sys_queue.c:36:9:shell_queue_full	16	static
-../Core/Src/sys_queue.c:50:9:shell_queue_empty	16	static
-../Core/Src/sys_queue.c:65:9:shell_queue_in	16	static
-../Core/Src/sys_queue.c:85:9:shell_queue_out	16	static
