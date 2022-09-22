@@ -34,6 +34,9 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Core/Src/../Inc/ICM20948_WE.h ../Core/Src/../SysInit/sys_init.h \
  ../Core/Src/../SysInit/../Inc/ICM20948_WE.h \
  ../Core/Src/../Controllib/generic_pid.h \
+ ../Core/Src/../ConfigEeprom/EEPROM.h \
+ ../Core/Src/../ConfigEeprom/config_eeprom.h \
+ ../Core/Src/../ConfigEeprom/EEPROM.h \
  ../Core/Src/../Inc/sys_command_line.h ../Core/Src/../Inc/main.h \
  ../Core/Src/../Inc/sys_queue.h ../Core/Src/../Inc/vt100.h
 ../Core/Inc/main.h:
@@ -73,6 +76,9 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 ../Core/Src/../SysInit/sys_init.h:
 ../Core/Src/../SysInit/../Inc/ICM20948_WE.h:
 ../Core/Src/../Controllib/generic_pid.h:
+../Core/Src/../ConfigEeprom/EEPROM.h:
+../Core/Src/../ConfigEeprom/config_eeprom.h:
+../Core/Src/../ConfigEeprom/EEPROM.h:
 ../Core/Src/../Inc/sys_command_line.h:
 ../Core/Src/../Inc/main.h:
 ../Core/Src/../Inc/sys_queue.h:

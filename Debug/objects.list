@@ -1,3 +1,4 @@
+"./Core/ConfigEeprom/EEPROM.o"
 "./Core/Controllib/generic_pid.o"
 "./Core/Src/ICM20948_WE.o"
 "./Core/Src/Inclinometer.o"

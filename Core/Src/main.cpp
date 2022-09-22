@@ -30,6 +30,8 @@
 #include <cstdio>
 #include <string>
 
+#include "../ConfigEeprom/EEPROM.h"
+#include "../ConfigEeprom/config_eeprom.h"
 extern "C" {
 #include "../Inc/sys_command_line.h"
 
@@ -74,24 +76,6 @@ static void MX_TIM5_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_FDCAN1_Init(void);
 /* USER CODE BEGIN PFP */
-enum class eeprom_layout {
-	l1_kp = 0x1, l1_ki = 0x2, l1_kd = 0x3, l1_bias = 0x4, l1_x = 0x5
-};
-void update_config_eeprom(uint8_t param, eeprom_layout parameter_address) {
-uint8_t txData[1]= {param};
-
-}
-
-void read_config_eeprom(){
-	uint8_t pData[8];
-	HAL_I2C_Mem_Read(&hi2c3, 0xA2, 0, 0x010, pData, 8, 10);
-	printf("Reading config-eeprom:\r\n");
-	for(int i=0;i<5;i++)
-	{
-		printf("%d\r\n",pData[i]);
-	}
-
-}
 
 uint8_t set_dutycycle(int argc, char *argv[]) {
 	uint64_t pulse_width = std::stoi(argv[1]);
@@ -104,6 +88,7 @@ uint8_t set_dutycycle(int argc, char *argv[]) {
 }
 
 uint8_t set_pid1_params(int argc, char *argv[]) {
+	using namespace configuration::l1_params;
 	char option = argv[1][0];
 	double param = std::stoi(argv[2]);
 
@@ -111,25 +96,22 @@ uint8_t set_pid1_params(int argc, char *argv[]) {
 	switch (option) {
 	case 'p':
 		tilt_angle_controller.set_kp(param);
-		update_config_eeprom(param,eeprom_layout::l1_kp);
+		save_kp(param);
 		break;
 	case 'i':
 		tilt_angle_controller.set_ki(param);
-		update_config_eeprom(param,eeprom_layout::l1_ki);
+		save_ki(param);
 		break;
 	case 'd':
 		tilt_angle_controller.set_kd(param);
-		update_config_eeprom(param,eeprom_layout::l1_kd);
+		save_kd(param);
 		break;
 	case 'b':
 		tilt_angle_controller.set_bias(param);
-		update_config_eeprom(param,eeprom_layout::l1_bias);
-
+		save_bias(param);
 		break;
 	case 'x':
 		tilt_angle_controller.update_setpoint(param);
-		update_config_eeprom(param,eeprom_layout::l1_x);
-
 		break;
 	default:
 		printf("Invalid Argument 0x%x\r\n", argv[1][0]);
@@ -238,6 +220,24 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
+#define DEV_ADDR 0xa0
+uint8_t dataw1[] = "hello world from EEPROM";
+uint8_t dataw2[] = "This is the second string from EEPROM";
+float dataw3 = 1234.5678;
+uint8_t datar1[100];
+uint8_t datar2[100];
+float datar3;
+//for (int i=0; i<512; i++)
+//  {
+//	  EEPROM_PageErase(i);
+//  }
+  EEPROM_Write(3, 0, dataw1, strlen((char *)dataw1));
+  EEPROM_Write(5, 20, dataw2, strlen((char *)dataw2));
+  EEPROM_Write_NUM (6, 0, dataw3);
+  EEPROM_Read(3, 0, datar1, 50);
+  EEPROM_Read(5, 15, datar2, 50);
+  datar3 = EEPROM_Read_NUM (6, 0);
+
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
 	CLI_INIT(&huart2);
 	CLI_ADD_CMD("tilt", "tilt [up] / [down] [ms-time=100]", tilt_request);
@@ -245,6 +245,7 @@ int main(void)
 	CLI_ADD_CMD("l1_param", "inner PID-Controller params:[p,i,d,b,x]",
 			set_pid1_params);
 	CLI_RUN();
+
 	ICM20948_WE myIMU = ICM20948_WE(&hi2c3);
 
 	if (!myIMU.init()) {
@@ -312,27 +313,14 @@ int main(void)
     }
 
 	// Load parameters from eeprom:
-	/*
-	 * Parameters written from eeprom hex-file:
-	 * address | parameter
-	 * 0x00 selected controller type
-	 * ------------------------------
-	 * -- 0x00 .. 0x05 : l1 parameters
-	 * 0x01 kp
-	 * 0x02 ki
-	 * 0x03 kd
-	 * 0x04 bias
-	 * 0x05 x (setpoint)
-	 *-------------------------------
-	 */
-//	read_config_eeprom();
-//	while (1) {
-//		uint8_t pData[8];
-//		uint8_t txData[4] = { 0x1, 0x2, 0x3, 0x4 };
-//		HAL_I2C_Mem_Write(&hi2c3, 0xA2, 0, 0x010, txData, 8, 10);
-//		HAL_I2C_Mem_Read(&hi2c3, 0xA2, 0, 0x010, pData, 8, 10);
-//		HAL_Delay(1);
-//	}
+    /*
+	configuration::l1_params::save_kp(1);
+	configuration::l1_params::save_ki(2);
+	configuration::l1_params::save_kd(0);
+	configuration::l1_params::save_bias(0);
+	*/
+	auto c = configuration::l1_params::load_page();
+
 	// Alle sensoren testen:
 	Init::sensor_checkup(myIMU);
 	Init::sensor_checkup(myIMU);

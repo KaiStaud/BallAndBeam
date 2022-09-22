@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 //#define ENABLE_L1_PLOTTING 1
-
+#define USE_EEPROM
 #ifdef ENABLE_L1_PLOTTING
 #include <stdio.h>
 #include <math.h>
